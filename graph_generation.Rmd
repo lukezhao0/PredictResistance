@@ -1,0 +1,105 @@
+---
+title: "Graph Generation Code"
+output: html_notebook
+---
+
+## 1.
+Figure 1: Alpha MN UMAP with cell clustering into ff, fr, sf
+
+```{r}
+
+fig1 <- DimPlot(alpha, reduction = "X_umap", label = TRUE, cols = c("red", "blue", "grey")) + NoAxes()
+ggsave(filename = paste(graph.save.dir, 'fig1.pdf'), plot = fig1, device = 'pdf')
+```
+
+## 2.
+Figures 2 and 3 - umap/pca graphical clustering for ag.combined
+
+```{r}
+fig2 <- DimPlot(ag.combined, label = TRUE, reduction = 'umap')
+ggsave(filename = paste(graph.save.dir, 'ag.combined.umap.pdf'), plot = fig2, device = 'pdf')
+
+fig3 <- DimPlot(ag.combined, label = TRUE, reduction = 'pca')
+ggsave(filename = paste(graph.save.dir, 'ag.combined.pca.pdf'), plot = fig3, device = 'pdf')
+
+# Add FeaturePlot() to visualize gene expression across ag.combined (reduction = umap)
+```
+
+## 3.
+Probability plot of how accurate classifications are under the trained model
+
+```{r}
+# from bootstrap #2
+all.graph <- plot_probabilities(all)
+ggsave(filename = paste(graph.save.dir, 'all.prob.graph.pdf'), plot = all.graph, device = 'pdf')
+```
+
+## 4.
+UMAP plot of whether predicted values for test set is comparable to known values
+
+```{r}
+all.test <- RunUMAP(all.test, reduction = "scpred", dims = 1:30)
+all.test.comparison <- (DimPlot(all.test, group.by = "phenotype") + NoAxes() + ggtitle("Actual")) + (DimPlot(all.test, group.by = "scpred_prediction") + NoAxes() + ggtitle("Predicted"))
+
+ggsave(filename = paste(graph.save.dir, 'all.test.comparison.pdf'), plot = all.test.comparison, device = 'pdf')
+```
+
+## 5.
+Predicted values in visceral and beta populations
+
+```{r}
+# PCs = scpred features
+scpred.graph.visceral <- ( DimPlot(all.visceral, group.by = "scpred_prediction", reduction = "scpred") + ggtitle("Visceral") + NoAxes() )
+ggsave(filename = paste(graph.save.dir, 'scpred.graph.visceral.pdf'), plot = scpred.graph.visceral, device = 'pdf')
+
+scpred.graph.beta <-( DimPlot(all.beta, group.by = "scpred_prediction", reduction = "scpred") + ggtitle("Beta") + NoAxes() )
+ggsave(filename = paste(graph.save.dir, 'scpred.graph.beta.pdf'), plot = scpred.graph.beta, device = 'pdf')
+
+# PCs = umap
+all.visceral <- RunUMAP(all.visceral, reduction = "scpred", dims = 1:30)
+all.beta <- RunUMAP(all.beta, reduction = "scpred", dims = 1:30)
+
+umap.graph.visceral <- ( DimPlot(all.visceral, group.by = "scpred_prediction") + ggtitle("Visceral") + NoAxes() )
+ggsave(filename = paste(graph.save.dir, 'umap.graph.visceral.pdf'), plot = umap.graph.visceral, device = 'pdf')
+
+umap.graph.beta <- ( DimPlot(all.beta, group.by = "scpred_prediction") + ggtitle("Beta") + NoAxes() )
+ggsave(filename = paste(graph.save.dir, 'umap.graph.beta.pdf'), plot = umap.graph.beta, device = 'pdf')
+
+# Feature plot of probabilities
+
+visceral.probability.graph <- (FeaturePlot(all.visceral, "scpred_res") + NoAxes() + ggtitle("Resistant")) + (FeaturePlot(all.visceral, "scpred_vuln") + NoAxes() + ggtitle("Vulnerable"))
+ggsave(filename = paste(graph.save.dir, 'visceral.probability.graph.pdf'), plot = visceral.probability.graph, device = 'pdf')
+
+beta.probability.graph <- (FeaturePlot(all.beta, "scpred_res") + NoAxes() + ggtitle("Resistant")) + (FeaturePlot(all.beta, "scpred_vuln") + NoAxes() + ggtitle("Vulnerable"))
+ggsave(filename = paste(graph.save.dir, 'beta.probability.graph.pdf'), plot = beta.probability.graph, device = 'pdf')
+```
+
+## 6.
+FeaturePlots of final genes
+
+```{r}
+finalgenes.visceral <- FeaturePlot(all.visceral, features = c('Cadm1', 'Ctnna3','Rxfp1', 'Pcdh15','Pard3b','Cdh6','Fstl5','Ryr3','Gabrg3','Sst','Plppr1','Grm8'), reduction = 'X_umap')
+ggsave(filename = paste(graph.save.dir, 'finalgenes.visceral.featureplot.pdf'), plot = finalgenes.visceral, device = 'pdf')
+
+a <- FeaturePlot(all.visceral, features = c('Cadm1', 'Ctnna3','Rxfp1', 'Pcdh15','Pard3b','Cdh6'), reduction = "X_umap")
+ggsave(filename = paste(graph.save.dir, 'a.pdf'), plot = a, device = 'pdf')
+
+b <- FeaturePlot(all.visceral, features = c('Fstl5','Ryr3','Gabrg3','Sst','Plppr1','Grm8'), reduction = "X_umap")
+ggsave(filename = paste(graph.save.dir, 'b.pdf'), plot = b, device = 'pdf')
+
+
+finalgenes.beta <- FeaturePlot(all.beta, features = c('Cadm1', 'Ctnna3','Rxfp1', 'Pcdh15','Pard3b','Cdh6','Fstl5','Ryr3','Gabrg3','Sst','Plppr1','Grm8'), reduction = 'X_umap')
+ggsave(filename = paste(graph.save.dir, 'finalgenes.beta.featureplot.pdf'), plot = finalgenes.beta, device = 'pdf')
+
+c <- FeaturePlot(all.beta, features = c('Cadm1', 'Ctnna3','Rxfp1', 'Pcdh15','Pard3b','Cdh6'), reduction = "X_umap")
+ggsave(filename = paste(graph.save.dir, 'c.pdf'), plot = c, device = 'pdf')
+
+d <- FeaturePlot(all.beta, features = c('Fstl5','Ryr3','Gabrg3','Sst','Plppr1','Grm8'), reduction = "X_umap")
+ggsave(filename = paste(graph.save.dir, 'd.pdf'), plot = d, device = 'pdf')
+
+
+#finalgenes.visceral.beta <- FeaturePlot
+```
+
+
+
