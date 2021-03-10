@@ -1,2 +1,2 @@
 # PredictResistance
-Predicting neurons as resistant or vulnerable to neurodegeneration
+Predicting neuron resistance in neurodegenerative diseases
