@@ -4,7 +4,7 @@ output: html_notebook
 ---
 
 ## 1.
-Figure 1: Alpha MN UMAP with cell clustering into ff, fr, sf
+Alpha MN UMAP with cell clustering into ff, fr, sf
 
 ```{r}
 
@@ -13,7 +13,7 @@ ggsave(filename = paste(graph.save.dir, 'fig1.pdf'), plot = fig1, device = 'pdf'
 ```
 
 ## 2.
-Figures 2 and 3 - umap/pca graphical clustering for ag.combined
+Umap/pca graphical clustering for ag.combined
 
 ```{r}
 fig2 <- DimPlot(ag.combined, label = TRUE, reduction = 'umap')
