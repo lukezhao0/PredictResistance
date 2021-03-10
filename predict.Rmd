@@ -1,0 +1,69 @@
+---
+title: "ML Prediction (SVM)"
+output: html_notebook
+---
+
+Initial input: a preprocessed Seurat object ag.combined with all training data
+
+## 1.
+Import packages
+
+```{r}
+library(scPred)
+```
+
+## 2.
+Load predicting data (query) and convert to a Seurat object
+
+```{r}
+visceral.data <- readH5AD(file = "~/Documents/R/GSE161621_filtered_data/visceralmns.h5ad")
+v.counts <- assay(visceral.data, "X")
+v.libsizes <- colSums(v.counts)
+v.size.factors <- v.libsizes/mean(v.libsizes)
+logcounts(visceral.data) <- log2(t(t(v.counts)/v.size.factors) + 1)
+logcounts(visceral.data) = as.matrix(logcounts(visceral.data))
+visceral <- as.Seurat(visceral.data, counts = "X", data = "logcounts")
+```
+
+## 3.
+Add resistant/vulnerable metadata to training data
+
+```{r}
+# pbmc$CellType <- Idents(pbmc)
+
+# Create 'phenotype' dataframe (# of rows = # of rows in ag.combined)
+phenotype <- data.frame(rownames(ag.combined@meta.data), row.names = rownames(ag.combined@meta.data))
+colnames(phenotype) <- "p"
+
+# Subsets of ff, fr, sf, b, and g data
+ff.subset <- subset(ag.combined, idents = "ff")
+fr.subset <- subset(ag.combined, idents = "fr")
+sf.subset <- subset(ag.combined, idents = "sf")
+# beta.subset
+# gamma.subset
+
+ff.cellNames <- rownames(ff.subset@meta.data)
+fr.cellNames <- rownames(fr.subset@meta.data)
+vuln.cellNames <- c(ff.cellNames, fr.cellNames)
+
+sf.cellNames <- rownames(sf.subset@meta.data)
+g.cellNames <- rownames(gamma.subset@meta.data)
+res.cellNames <- c(sf.cellNames, g.cellNames)
+
+b.cellNames <- rownames(beta.subset@meta.data)
+
+# Iteratively changes dataframe
+phenotype$p[phenotype$p %in% vuln.cellNames] <- "vuln"
+phenotype$p[phenotype$p %in% res.cellNames] <-  "res"
+phenotype$p[phenotype$p %in% b.cellNames] <-  "beta_predict"
+
+# Adds dataframe into ag.combined@meta.data - Can now be accessed by ag.combined$phenotype
+ag.combined <- AddMetaData(object = ag.combined, metadata = phenotype, col.name = "phenotype")
+```
+
+## 4.
+Take out beta cells from training data
+
+```{r}
+ag.training <- subset(ag.combined, idents = 'beta', invert = TRUE)
+```

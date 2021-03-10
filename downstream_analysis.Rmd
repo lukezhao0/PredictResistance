@@ -1,0 +1,46 @@
+---
+title: "Downstream Analysis"
+output: html_notebook
+---
+
+## 1.
+Predicting in visceral + beta dataset
+
+```{r}
+all.visceral <- scPredict(visceral, all)
+all.beta <- scPredict(beta.subset, all)
+```
+
+## 2.
+Find differentially expressed genes between vulnerable and resistant populations
+
+```{r}
+vb.combined <- merge(all.visceral, all.beta) # Merge visceral and beta data into one object
+Idents(object = vb.combined) <- vb.combined$scpred_prediction # Assign identities based on whether res/vuln
+vb.markers <- FindMarkers(vb.combined, ident.1 = "res", ident.2 = "vuln") # DE
+
+# Sorted by log2FC > 0.5 or < -0.5
+
+#vb.markers[order(vb.markers$avg_log2FC, decreasing = TRUE),]
+vb.greater.0.5 <- vb.markers[which(vb.markers$avg_log2FC > 0.5), ]
+vb.less.0.5 <- vb.markers[which(vb.markers$avg_log2FC < -0.5), ]
+
+vb.markers.combined <- rbind(vb.greater.0.5, vb.less.0.5)  # select out genes expressed at log2_FC > 0.5 or < -0.5
+vb.markers.sorted.log <- vb.markers.combined[order(-vb.markers.combined$avg_log2FC), ] # data frame ordered from most to least
+
+# Sorted by log2FC > 0.75 or < -0.75
+
+vb.greater.0.75 <- vb.markers[which(vb.markers$avg_log2FC > 0.75), ]
+vb.less.0.75 <- vb.markers[which(vb.markers$avg_log2FC < -0.75), ]
+
+vb.markers.combined.0.75 <- rbind(vb.greater.0.75, vb.less.0.75)
+vb.markers.sorted.log.0.75 <- vb.markers.combined.0.75[order(-vb.markers.combined.0.75$avg_log2FC), ]
+
+# Sorted by % expression
+# ...
+
+```
+
+
+
+
