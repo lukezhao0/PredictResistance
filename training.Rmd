@@ -1,0 +1,82 @@
+---
+title: "Training and accuracy testing"
+output: html_notebook
+---
+
+· PCA of global genes used in feature space: no DE to find discriminant genes between res/vuln
+
+## 1.
+Random subset of 652 resistant neurons to balance training data (reduce bias). 
+
+Vuln:    652    
+Res:     652    + 426 'res' data points left over
+Total:   1304
+
+```{r}
+set.seed(30821)  # sets anchor for random number generation -> reproducible code
+res.sampling.names <- sample(x = res.cellNames, size = 426, replace = FALSE) # random sample of 426 cells
+bias.corrected.res <- subset(ag.training, cells = res.sampling.names, invert = TRUE)
+res.testing <- subset(ag.training, cells = res.sampling.names, invert = FALSE)
+```
+
+## 2.
+Randomly subset off 104 cells for testing ML accuracy.
+
+Training: 1200
+Testing: 530
+
+```{r}
+set.seed(30721)
+testing.names <- sample(x = colnames(bias.corrected.res), size = 104, replace = FALSE) # random sample of 104 cells
+testing.cells <- subset(bias.corrected.res, cells = testing.names)
+training.cells <- subset(bias.corrected.res, cells = testing.names, invert = TRUE)
+
+training.genes <- rownames(training.cells)
+training.cells <- training.cells %>%
+  NormalizeData() %>%
+  FindVariableFeatures(selection.method = "vst", nfeatures = 2000) %>%
+  ScaleData(features = training.genes) %>%
+  RunPCA(features = VariableFeatures(object = training.cells)) %>%
+  RunUMAP(dims = 1:30)
+```
+
+## 3.
+Create feature space + train ML
+
+```{r}
+all <- getFeatureSpace(object = training.cells, pvar = "phenotype", correction = "fdr", sig = 1, reduction = 'pca')
+
+all <- trainModel(all)
+all.probabilities <- get_probabilities(all) # probabilities of each classification
+all.summary <- get_scpred(all) # summary table
+```
+
+## 4.
+Testing model: % accuracy with a known-value test set
+
+```{r}
+testing <- merge(testing.cells, res.testing)
+testing <- NormalizeData(testing)
+all.test <- scPredict(testing, all)
+
+all.verify <- crossTab(all.test, "phenotype", "scpred_prediction")
+# 472/530 = 89.06% success
+# columns = each type of classified neuron
+# rows = where each neuron was classified
+```
+
+## 5.
+ML model with global genes summary (boostrap 1)
+· 89.06% success based on 472/530 testing data points
+· res: ROC 0.992, sensitivity 0.957, specificity 0.96
+· vuln: ROC 0.992, sensitivity 0.96, specificity 0.957
+
+Iterating across 5 bootstrap replicates (resampling training and testing data):
+· Average success rate:     88.303%
+· Average ROC:              0.9916
+· Average res sensitivity:  0.9566
+· Average res selectivity:  0.9586
+· Average vuln sensitivity: 0.9586
+· Average vuln sensitivity: 0.9566
+
+
