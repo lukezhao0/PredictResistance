@@ -1,5 +1,6 @@
 # PredictResistance
 Predicting neuron survival in ALS
+
 Slides: https://docs.google.com/presentation/d/1MmYstklFFwoZ-S4kKDJaSPKiiv0lTBNj4XkYvEnGxwA/edit?usp=sharing
 
 ALS is a devastating neurodegenerative disease that kills the body's motor neurons, resulting in progressive paralysis and a survival of 2-4 years. However, some motor neurons degenerate, like fast-firing motor neurons, while others do not, like slow-firing motor neurons. Can we distinguish the neurons that are resistant or vulnerable to ALS using machine learning?
